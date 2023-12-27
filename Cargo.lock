@@ -21,6 +21,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "disseqt"
+version = "0.1.0"
+source = "git+https://github.com/pulseq-frame/disseqt.git#1dc35eaac85708df436902fdbdea1512578a0cba"
+dependencies = [
+ "pulseq-rs",
+]
+
+[[package]]
+name = "ezpc"
+version = "0.1.0"
+source = "git+https://github.com/pulseq-frame/ezpc.git#051f69451d097886a6bd24ff3bf66a6bf2ebe25c"
+
+[[package]]
 name = "indoc"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -90,9 +103,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulseq-rs"
+version = "0.1.0"
+source = "git+https://github.com/pulseq-frame/pulseq-rs.git#f67cac3b869d3e004705ca2e048942bea55d1fe0"
+dependencies = [
+ "ezpc",
+ "thiserror",
+]
+
+[[package]]
 name = "pydisseqt"
 version = "0.1.0"
 dependencies = [
+ "disseqt",
  "pyo3",
 ]
 
@@ -142,7 +165,7 @@ dependencies = [
  "proc-macro2",
  "pyo3-macros-backend",
  "quote",
- "syn",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -153,7 +176,7 @@ checksum = "947dc12175c254889edc0c02e399476c2f652b4b9ebd123aa655c224de259536"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -198,10 +221,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "syn"
+version = "2.0.43"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee659fb5f3d355364e1f3e5bc10fb82068efbf824a1e9d1c9504244a6469ad53"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
+
+[[package]]
 name = "target-lexicon"
 version = "0.12.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c39fd04924ca3a864207c66fc2cd7d22d7c016007f9ce846cbb9326331930a"
+
+[[package]]
+name = "thiserror"
+version = "1.0.52"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83a48fd946b02c0a526b2e9481c8e2a17755e47039164a86c4070446e3a4614d"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.52"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7fbe9b594d6568a6a1443250a7e67d80b74e1e96f6d1715e1e21cc1888291d3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.43",
+]
 
 [[package]]
 name = "unicode-ident"
