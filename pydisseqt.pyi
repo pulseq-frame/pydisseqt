@@ -7,7 +7,9 @@ class SeqParser:
     in order to provede query functions that simulations can use."""
 
     def __init__(self, source: str) -> None:
-        """Construct a SeqParser from the .seq source code."""
+        """Construct a SeqParser from the .seq source code.
+        Can raise an exception if parsing failed.
+        """
 
     def time_range() -> tuple[float, float]:
         """Return the time range in which sequence lies. These are upper
