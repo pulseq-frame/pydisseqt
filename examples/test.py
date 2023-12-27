@@ -1,6 +1,6 @@
-from pydissect import SeqParser
+from pydisseqt import SeqParser
 
-with open("examples/test.seq") as f:
+with open("examples/gre.seq") as f:
     parser = SeqParser(f.read())
 
 
