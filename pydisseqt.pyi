@@ -1,30 +1,33 @@
-from typing import Literal
+from enum import Enum
 # TODO: These are really basic descriptions, replace by properly formatted and detailed documentation
 
 
-class SeqParser:
-    """The seq parser is a class that takes the .seq source and parses it,
-    in order to provede query functions that simulations can use."""
+class EventType(Enum):
+    RfPulse = 0
+    Adc = 1
+    Gradient = 2
+
+
+class Sequence:
+    """Some sequence, wraps a Rust disseqt::Sequence trait object."""
 
     def __init__(self, source: str) -> None:
         """Construct a SeqParser from the .seq source code.
         Can raise an exception if parsing failed.
         """
 
-    def time_range() -> tuple[float, float]:
-        """Return the time range in which sequence lies. These are upper
-        bounds, the actual sequence might be shorter."""
+    def duration() -> float:
+        """ Returns the next time range of the next block of the given type.
+        If `t_start` is inside of a block, this block is not returned: only
+        blocks *starting* after `t_start` are considered."""
 
-    def next(self, t_start: float, poi: Literal[
-             'pulse_start', 'pulse_sample', 'pulse_end',
-             'gradient_start', 'gradient_sample', 'gradient_end',
-             'adc_start', 'adc_sample', 'adc_end']
-             ) -> float | None:
-        """Return the time point of the next point of interest (POI), beginning
-        with the provided starting time. Can return None if no POI of the given
-        type was found."""
+    def next_block(self, t_start: float, ty: str):
+        pass
 
-    def integrate(self, t0: float, t1: float
+    def next_poi(self, t_start: float, ty: str):
+        pass
+
+    def integrate(self, t_start: float, t_end: float
                   ) -> tuple[tuple[float, float], tuple[float, float, float]]:
         """Returns the integration result over the time [t0, t1].
 
