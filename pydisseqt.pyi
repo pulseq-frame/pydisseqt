@@ -2,6 +2,10 @@ from enum import Enum
 # TODO: These are really basic descriptions, replace by properly formatted and detailed documentation
 
 
+def load_pulseq(file_path: str) -> Sequence:
+    """Load sequence from a pulseq .seq file."""
+
+
 class EventType(Enum):
     RfPulse = 0
     Adc = 1
@@ -11,12 +15,10 @@ class EventType(Enum):
 class Sequence:
     """Some sequence, wraps a Rust disseqt::Sequence trait object."""
 
-    def __init__(self, source: str) -> None:
-        """Construct a SeqParser from the .seq source code.
-        Can raise an exception if parsing failed.
-        """
+    def fov(self) -> tuple[float, float, float] | None:
+        pass
 
-    def duration() -> float:
+    def duration(self) -> float:
         """ Returns the next time range of the next block of the given type.
         If `t_start` is inside of a block, this block is not returned: only
         blocks *starting* after `t_start` are considered."""

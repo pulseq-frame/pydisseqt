@@ -17,6 +17,10 @@ fn load_pulseq(path: &str) -> PyResult<Sequence> {
 
 #[pymethods]
 impl Sequence {
+    fn fov(&self) -> Option<(f32, f32, f32)> {
+        self.0.fov()
+    }
+
     fn duration(&self) -> f32 {
         self.0.duration()
     }
@@ -34,7 +38,7 @@ impl Sequence {
     fn integrate(&self, t_start: f32, t_end: f32) -> ((f32, f32), (f32, f32, f32)) {
         let (pulse, gradient) = self.0.integrate(t_start, t_end);
         (
-            (pulse.angle, pulse.angle),
+            (pulse.angle, pulse.phase),
             (gradient.gx, gradient.gy, gradient.gz),
         )
     }
@@ -64,6 +68,7 @@ fn pydisseqt(py: Python, m: &PyModule) -> PyResult<()> {
 
 // Simple helpers not directly exposed to python
 
+// TODO: rename rf-pulse to just rf
 fn str_to_event_type(ty: &str) -> PyResult<disseqt::EventType> {
     Ok(match ty {
         "rf-pulse" => disseqt::EventType::RfPulse,
