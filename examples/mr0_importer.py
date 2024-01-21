@@ -41,31 +41,36 @@ def import_pulseq(path: str) -> mr0.Sequence:
 
         # Now build the mr0 repetition
 
-        rep = seq.new_rep(len(adc_times) + 1)
+        # We simulate always up to the next ADC sample, except for the last
+        # event where we simulate up to the next pulse (could skip in last rep)
+        event_count = len(adc_times) + 1
+
+        rep = seq.new_rep(event_count)
         (angle, phase), _ = parser.integrate(pulse_start, pulse_end)
         rep.pulse.angle = angle
         rep.pulse.phase = phase
         rep.pulse.usage = pulse_usage(angle)
 
         abs_times = [rep_start] + adc_times + [rep_end]
-
-        moments = parser.integrate_n(abs_times)
         samples = parser.sample_n(adc_times)
+        moments = parser.integrate_n(abs_times)
+
+        rep.event_time[:] = torch.as_tensor(np.diff(abs_times))
+
+        # The following loop takes 99% of the time, even though it does basically
+        # nothing (since the introduction of the bulk integration / sampling functions).
+        # -> Find a way to more quickly move the data from disseqt into the event structures.
 
         for i in range(len(abs_times) - 1):
-            rep.event_time[i] = abs_times[i + 1] - abs_times[i]
-
             _, (gx, gy, gz) = moments[i]
             rep.gradm[i, 0] = gx * fov[0]
             rep.gradm[i, 1] = gy * fov[1]
             rep.gradm[i, 2] = gz * fov[2]
 
-            # There is no ADC at the end of the last sample
-            if i < len(adc_times):
-                rep.adc_usage[i] = 1
-                # ADC is at the end of sample, we skip [rep_start]
+            if i < len(samples):
                 _, _, (_, phase, _) = samples[i]
                 rep.adc_phase[i] = np.pi / 2 - phase
+                rep.adc_usage[i] = 1
 
     return seq
 
