@@ -6,6 +6,7 @@ import numpy as np
 # NOTE: This importer is not diffusion-save.
 # For this, add more events at appropriate positions (maybe gated by a flag)
 
+
 # %%
 def import_pulseq(path: str) -> mr0.Sequence:
     parser = pydisseqt.load_pulseq(path)
@@ -42,7 +43,7 @@ def import_pulseq(path: str) -> mr0.Sequence:
             adc = parser.next_poi(t, "adc")
 
         # Now build the mr0 repetition
-        
+
         rep = seq.new_rep(len(adc_times) + 1)
         (angle, phase), _ = parser.integrate(pulse_start, pulse_end)
         rep.pulse.angle = angle
@@ -66,23 +67,35 @@ def import_pulseq(path: str) -> mr0.Sequence:
                 _, _, (phase, _) = parser.sample(abs_times[i + 1])
                 assert phase is not None, "Bug: ADC should be active on adc_sample"
                 rep.adc_phase[i] = np.pi / 2 - phase
-    
+
     return seq
+
 
 # %%
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import torch
+    from time import time
 
+    start = time()
     seq = import_pulseq("gre.seq")
+    # mr0.Sequence.from_seq_file("gre.seq")
+    print(f"Importing took {time() - start} seconds")
     phantom = mr0.VoxelGridPhantom.brainweb("subject04.npz")
-    data = phantom.interpolate(256, 256, 32).slices([16]).build()
+    data = phantom.interpolate(65, 65, 32).slices([16]).build()
 
     graph = mr0.compute_graph(seq, data)
-    signal = mr0.execute_graph(graph, seq.cuda(), data.cuda()).cpu()
-    reco = reco = torch.fft.fftshift(torch.fft.ifft2(torch.fft.ifftshift(signal.view(256, 256))))
+    signal = mr0.execute_graph(graph, seq, data)
+    reco = reco = torch.fft.fftshift(torch.fft.ifft2(
+        torch.fft.ifftshift(signal.view(256, 256))))
 
     plt.figure()
     plt.imshow(reco.abs(), origin='lower', vmin=0)
     plt.colorbar()
     plt.show()
+
+# %%
+import cProfile
+cProfile.run('import_pulseq("gre.seq")', sort="cumtime")
+
+# %%

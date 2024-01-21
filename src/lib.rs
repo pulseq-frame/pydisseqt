@@ -48,12 +48,11 @@ impl Sequence {
         (
             (pulse.amplitude, pulse.phase, pulse.frequency),
             (gradient.x, gradient.y, gradient.z),
-            match adc {
-                disseqt::AdcBlockSample::Inactive => (None, None),
-                disseqt::AdcBlockSample::Active { phase, frequency } => {
-                    (Some(phase), Some(frequency))
-                }
-            },
+            if adc.active {
+                (Some(adc.phase), Some(adc.frequency))
+            } else {
+                (None, None)
+            }
         )
     }
 }
