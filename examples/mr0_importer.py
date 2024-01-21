@@ -35,12 +35,9 @@ def import_pulseq(path: str) -> mr0.Sequence:
             rep_end = parser.duration()
 
         # Get all ADC sample times
-        adc_times = []
-        adc = parser.next_poi(t, "adc")
-        while adc is not None and adc < rep_end:
-            adc_times.append(adc)
-            t = adc + 1e-6
-            adc = parser.next_poi(t, "adc")
+        adc_times = parser.pois("adc", rep_start, rep_end)
+        if len(adc_times) > 0:
+            t = adc_times[-1]
 
         # Now build the mr0 repetition
 
@@ -52,10 +49,13 @@ def import_pulseq(path: str) -> mr0.Sequence:
 
         abs_times = [rep_start] + adc_times + [rep_end]
 
-        for i in range(len(adc_times) + 1):
+        moments = parser.integrate_n(abs_times)
+        samples = parser.sample_n(adc_times)
+
+        for i in range(len(abs_times) - 1):
             rep.event_time[i] = abs_times[i + 1] - abs_times[i]
 
-            _, (gx, gy, gz) = parser.integrate(abs_times[i], abs_times[i + 1])
+            _, (gx, gy, gz) = moments[i]
             rep.gradm[i, 0] = gx * fov[0]
             rep.gradm[i, 1] = gy * fov[1]
             rep.gradm[i, 2] = gz * fov[2]
@@ -64,8 +64,7 @@ def import_pulseq(path: str) -> mr0.Sequence:
             if i < len(adc_times):
                 rep.adc_usage[i] = 1
                 # ADC is at the end of sample, we skip [rep_start]
-                _, _, (phase, _) = parser.sample(abs_times[i + 1])
-                assert phase is not None, "Bug: ADC should be active on adc_sample"
+                _, _, (_, phase, _) = samples[i]
                 rep.adc_phase[i] = np.pi / 2 - phase
 
     return seq

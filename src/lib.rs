@@ -35,6 +35,13 @@ impl Sequence {
         Ok(self.0.next_poi(t_start, ty))
     }
 
+    fn pois(&self, ty: &str, t_start: Option<f32>, t_end: Option<f32>) -> PyResult<Vec<f32>> {
+        let ty = str_to_event_type(ty)?;
+        let t_start = t_start.unwrap_or(f32::NEG_INFINITY);
+        let t_end = t_end.unwrap_or(f32::INFINITY);
+        Ok(self.0.pois(&(t_start..=t_end), ty))
+    }
+
     fn integrate(&self, t_start: f32, t_end: f32) -> ((f32, f32), (f32, f32, f32)) {
         let (pulse, gradient) = self.0.integrate(t_start, t_end);
         (
@@ -43,17 +50,32 @@ impl Sequence {
         )
     }
 
-    fn sample(&self, t: f32) -> ((f32, f32, f32), (f32, f32, f32), (Option<f32>, Option<f32>)) {
+    fn integrate_n(&self, time: Vec<f32>) -> Vec<((f32, f32), (f32, f32, f32))> {
+        self.0.integrate_n(&time).into_iter().map(|moment| {
+            (
+                (moment.pulse.angle, moment.pulse.phase),
+                (moment.gradient.gx, moment.gradient.gy, moment.gradient.gz),
+            )
+        }).collect()
+    }
+
+    fn sample(&self, t: f32) -> ((f32, f32, f32), (f32, f32, f32), (bool, f32, f32)) {
         let (pulse, gradient, adc) = self.0.sample(t);
         (
             (pulse.amplitude, pulse.phase, pulse.frequency),
             (gradient.x, gradient.y, gradient.z),
-            if adc.active {
-                (Some(adc.phase), Some(adc.frequency))
-            } else {
-                (None, None)
-            }
+            (adc.active, adc.phase, adc.frequency)
         )
+    }
+
+    fn sample_n(&self, time: Vec<f32>) -> Vec<((f32, f32, f32), (f32, f32, f32), (bool, f32, f32))> {
+        self.0.sample_n(&time).into_iter().map(|sample| {
+            (
+                (sample.pulse.amplitude, sample.pulse.phase, sample.pulse.frequency),
+                (sample.gradient.x, sample.gradient.y, sample.gradient.z),
+                (sample.adc.active, sample.adc.phase, sample.adc.frequency)
+            )
+        }).collect()
     }
 }
 
