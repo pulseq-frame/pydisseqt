@@ -16,7 +16,6 @@ fn load_pulseq(path: &str) -> PyResult<Sequence> {
 #[pyclass]
 struct Sequence(disseqt::Sequence);
 
-// TODO: typing
 // TODO: provide pyO3 signatures with default values (if not in conflict with .pyi interface def)
 // https://pyo3.rs/v0.20.2/function/signature#:~:text=Like%20Python%2C%20by%20default%20PyO3,signature%20%3D%20(...))%5D
 
@@ -40,7 +39,7 @@ impl Sequence {
         Ok(self.0.events(ty, t_start, t_end, max_count))
     }
 
-    fn next_event(&self, t_start: f32, ty: &str) -> PyResult<Option<f32>> {
+    fn next_event(&self, ty: &str, t_start: f32) -> PyResult<Option<f32>> {
         let ty = str_to_event_type(ty)?;
         Ok(self.0.next_event(t_start, ty))
     }
@@ -75,27 +74,6 @@ impl Sequence {
         }
     }
 
-    fn sample_one(&self, t: f32) -> Sample {
-        let tmp = self.0.sample_one(t);
-        Sample {
-            pulse: RfPulseSample {
-                amplitude: tmp.pulse.amplitude,
-                phase: tmp.pulse.phase,
-                frequency: tmp.pulse.frequency,
-            },
-            gradient: GradientSample {
-                x: tmp.gradient.x,
-                y: tmp.gradient.y,
-                z: tmp.gradient.z,
-            },
-            adc: AdcBlockSample {
-                active: tmp.adc.active,
-                phase: tmp.adc.phase,
-                frequency: tmp.adc.frequency,
-            },
-        }
-    }
-
     fn sample(&self, time: Vec<f32>) -> SampleVec {
         let tmp = self.0.sample(&time);
         SampleVec {
@@ -116,6 +94,27 @@ impl Sequence {
             },
         }
     }
+
+    fn sample_one(&self, t: f32) -> Sample {
+        let tmp = self.0.sample_one(t);
+        Sample {
+            pulse: RfPulseSample {
+                amplitude: tmp.pulse.amplitude,
+                phase: tmp.pulse.phase,
+                frequency: tmp.pulse.frequency,
+            },
+            gradient: GradientSample {
+                x: tmp.gradient.x,
+                y: tmp.gradient.y,
+                z: tmp.gradient.z,
+            },
+            adc: AdcBlockSample {
+                active: tmp.adc.active,
+                phase: tmp.adc.phase,
+                frequency: tmp.adc.frequency,
+            },
+        }
+    }
 }
 
 #[pymodule]
@@ -128,14 +127,13 @@ fn pydisseqt(py: Python, m: &PyModule) -> PyResult<()> {
 
 // Simple helpers not directly exposed to python
 
-// TODO: rename rf-pulse to just rf
 fn str_to_event_type(ty: &str) -> PyResult<disseqt::EventType> {
     Ok(match ty {
-        "rf-pulse" => disseqt::EventType::RfPulse,
+        "rf" => disseqt::EventType::RfPulse,
         "adc" => disseqt::EventType::Adc,
-        "gradient-x" => disseqt::EventType::Gradient(disseqt::GradientChannel::X),
-        "gradient-y" => disseqt::EventType::Gradient(disseqt::GradientChannel::Y),
-        "gradient-z" => disseqt::EventType::Gradient(disseqt::GradientChannel::Z),
+        "grad x" => disseqt::EventType::Gradient(disseqt::GradientChannel::X),
+        "grad y" => disseqt::EventType::Gradient(disseqt::GradientChannel::Y),
+        "grad z" => disseqt::EventType::Gradient(disseqt::GradientChannel::Z),
         _ => {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "Illegal event type",
