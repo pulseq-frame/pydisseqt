@@ -36,7 +36,7 @@ def import_pulseq(path: str) -> mr0.Sequence:
             rep_end = parser.duration()
 
         # Get all ADC sample times
-        adc_times = parser.events("adc", rep_start, rep_end, 100000)
+        adc_times = parser.events("adc", rep_start, rep_end)
         if len(adc_times) > 0:
             t = adc_times[-1]
 

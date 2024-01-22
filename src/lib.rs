@@ -16,9 +16,6 @@ fn load_pulseq(path: &str) -> PyResult<Sequence> {
 #[pyclass]
 struct Sequence(disseqt::Sequence);
 
-// TODO: provide pyO3 signatures with default values (if not in conflict with .pyi interface def)
-// https://pyo3.rs/v0.20.2/function/signature#:~:text=Like%20Python%2C%20by%20default%20PyO3,signature%20%3D%20(...))%5D
-
 #[pymethods]
 impl Sequence {
     fn fov(&self) -> Option<(f32, f32, f32)> {
@@ -34,6 +31,7 @@ impl Sequence {
         Ok(self.0.encounter(t_start, ty))
     }
 
+    #[pyo3(signature = (ty, t_start=f32::NEG_INFINITY, t_end=f32::INFINITY, max_count=usize::MAX))]
     fn events(&self, ty: &str, t_start: f32, t_end: f32, max_count: usize) -> PyResult<Vec<f32>> {
         let ty = str_to_event_type(ty)?;
         Ok(self.0.events(ty, t_start, t_end, max_count))
