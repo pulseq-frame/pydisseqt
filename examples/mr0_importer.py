@@ -1,4 +1,5 @@
 # %%
+import cProfile
 import pydisseqt
 import MRzeroCore as mr0
 import numpy as np
@@ -23,12 +24,12 @@ def import_pulseq(path: str) -> mr0.Sequence:
     if fov is None:
         fov = (1, 1, 1)
 
-    while parser.encounter(t, "rf-pulse") is not None:
-        pulse_start, pulse_end = parser.encounter(t, "rf-pulse")
+    while parser.encounter("rf", t) is not None:
+        pulse_start, pulse_end = parser.encounter("rf", t)
         rep_start = (pulse_start + pulse_end) / 2
 
         # Calculate end of repetition
-        next_pulse = parser.encounter(pulse_end, "rf-pulse")
+        next_pulse = parser.encounter("rf", pulse_end)
         if next_pulse is not None:
             rep_end = (next_pulse[0] + next_pulse[1]) / 2
         else:
@@ -92,8 +93,6 @@ if __name__ == "__main__":
     plt.colorbar()
     plt.show()
 
-# %%
-import cProfile
-cProfile.run('import_pulseq("gre.seq")', sort="cumtime")
+    cProfile.run('import_pulseq("gre.seq")', sort="cumtime")
 
 # %%

@@ -29,7 +29,7 @@ impl Sequence {
         self.0.duration()
     }
 
-    fn encounter(&self, t_start: f32, ty: &str) -> PyResult<Option<(f32, f32)>> {
+    fn encounter(&self, ty: &str, t_start: f32) -> PyResult<Option<(f32, f32)>> {
         let ty = str_to_event_type(ty)?;
         Ok(self.0.encounter(t_start, ty))
     }
