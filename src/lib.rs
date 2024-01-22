@@ -1,9 +1,9 @@
 use pyo3::{create_exception, prelude::*};
 
-create_exception!(pydisseqt, ParseError, pyo3::exceptions::PyException);
+mod types;
+pub use types::*;
 
-#[pyclass]
-struct Sequence(Box<dyn disseqt::Sequence>);
+create_exception!(pydisseqt, ParseError, pyo3::exceptions::PyException);
 
 #[pyfunction]
 fn load_pulseq(path: &str) -> PyResult<Sequence> {
@@ -13,7 +13,12 @@ fn load_pulseq(path: &str) -> PyResult<Sequence> {
     }
 }
 
-// TODO: The return values should be typed - wrap PulseSample, GradientSample etc.
+#[pyclass]
+struct Sequence(disseqt::Sequence);
+
+// TODO: typing
+// TODO: provide pyO3 signatures with default values (if not in conflict with .pyi interface def)
+// https://pyo3.rs/v0.20.2/function/signature#:~:text=Like%20Python%2C%20by%20default%20PyO3,signature%20%3D%20(...))%5D
 
 #[pymethods]
 impl Sequence {
@@ -25,57 +30,91 @@ impl Sequence {
         self.0.duration()
     }
 
-    fn next_block(&self, t_start: f32, ty: &str) -> PyResult<Option<(f32, f32)>> {
+    fn encounter(&self, t_start: f32, ty: &str) -> PyResult<Option<(f32, f32)>> {
         let ty = str_to_event_type(ty)?;
-        Ok(self.0.next_block(t_start, ty))
+        Ok(self.0.encounter(t_start, ty))
     }
 
-    fn next_poi(&self, t_start: f32, ty: &str) -> PyResult<Option<f32>> {
+    fn events(&self, ty: &str, t_start: f32, t_end: f32, max_count: usize) -> PyResult<Vec<f32>> {
         let ty = str_to_event_type(ty)?;
-        Ok(self.0.next_poi(t_start, ty))
+        Ok(self.0.events(ty, t_start, t_end, max_count))
     }
 
-    fn pois(&self, ty: &str, t_start: Option<f32>, t_end: Option<f32>) -> PyResult<Vec<f32>> {
+    fn next_event(&self, t_start: f32, ty: &str) -> PyResult<Option<f32>> {
         let ty = str_to_event_type(ty)?;
-        let t_start = t_start.unwrap_or(f32::NEG_INFINITY);
-        let t_end = t_end.unwrap_or(f32::INFINITY);
-        Ok(self.0.pois(&(t_start..=t_end), ty))
+        Ok(self.0.next_event(t_start, ty))
     }
 
-    fn integrate(&self, t_start: f32, t_end: f32) -> ((f32, f32), (f32, f32, f32)) {
-        let (pulse, gradient) = self.0.integrate(t_start, t_end);
-        (
-            (pulse.angle, pulse.phase),
-            (gradient.gx, gradient.gy, gradient.gz),
-        )
+    fn integrate(&self, time: Vec<f32>) -> MomentVec {
+        let tmp = self.0.integrate(&time);
+        MomentVec {
+            pulse: RfPulseMomentVec {
+                angle: tmp.pulse.angle,
+                phase: tmp.pulse.phase,
+            },
+            gradient: GradientMomentVec {
+                x: tmp.gradient.x,
+                y: tmp.gradient.y,
+                z: tmp.gradient.z,
+            },
+        }
     }
 
-    fn integrate_n(&self, time: Vec<f32>) -> Vec<((f32, f32), (f32, f32, f32))> {
-        self.0.integrate_n(&time).into_iter().map(|moment| {
-            (
-                (moment.pulse.angle, moment.pulse.phase),
-                (moment.gradient.gx, moment.gradient.gy, moment.gradient.gz),
-            )
-        }).collect()
+    fn integrate_one(&self, t_start: f32, t_end: f32) -> Moment {
+        let tmp = self.0.integrate_one(t_start, t_end);
+        Moment {
+            pulse: RfPulseMoment {
+                angle: tmp.pulse.angle,
+                phase: tmp.pulse.phase,
+            },
+            gradient: GradientMoment {
+                x: tmp.gradient.x,
+                y: tmp.gradient.y,
+                z: tmp.gradient.z,
+            },
+        }
     }
 
-    fn sample(&self, t: f32) -> ((f32, f32, f32), (f32, f32, f32), (bool, f32, f32)) {
-        let (pulse, gradient, adc) = self.0.sample(t);
-        (
-            (pulse.amplitude, pulse.phase, pulse.frequency),
-            (gradient.x, gradient.y, gradient.z),
-            (adc.active, adc.phase, adc.frequency)
-        )
+    fn sample_one(&self, t: f32) -> Sample {
+        let tmp = self.0.sample_one(t);
+        Sample {
+            pulse: RfPulseSample {
+                amplitude: tmp.pulse.amplitude,
+                phase: tmp.pulse.phase,
+                frequency: tmp.pulse.frequency,
+            },
+            gradient: GradientSample {
+                x: tmp.gradient.x,
+                y: tmp.gradient.y,
+                z: tmp.gradient.z,
+            },
+            adc: AdcBlockSample {
+                active: tmp.adc.active,
+                phase: tmp.adc.phase,
+                frequency: tmp.adc.frequency,
+            },
+        }
     }
 
-    fn sample_n(&self, time: Vec<f32>) -> Vec<((f32, f32, f32), (f32, f32, f32), (bool, f32, f32))> {
-        self.0.sample_n(&time).into_iter().map(|sample| {
-            (
-                (sample.pulse.amplitude, sample.pulse.phase, sample.pulse.frequency),
-                (sample.gradient.x, sample.gradient.y, sample.gradient.z),
-                (sample.adc.active, sample.adc.phase, sample.adc.frequency)
-            )
-        }).collect()
+    fn sample(&self, time: Vec<f32>) -> SampleVec {
+        let tmp = self.0.sample(&time);
+        SampleVec {
+            pulse: RfPulseSampleVec {
+                amplitude: tmp.pulse.amplitude,
+                phase: tmp.pulse.phase,
+                frequency: tmp.pulse.frequency,
+            },
+            gradient: GradientSampleVec {
+                x: tmp.gradient.x,
+                y: tmp.gradient.y,
+                z: tmp.gradient.z,
+            },
+            adc: AdcBlockSampleVec {
+                active: tmp.adc.active,
+                phase: tmp.adc.phase,
+                frequency: tmp.adc.frequency,
+            },
+        }
     }
 }
 

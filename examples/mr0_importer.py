@@ -23,19 +23,19 @@ def import_pulseq(path: str) -> mr0.Sequence:
     if fov is None:
         fov = (1, 1, 1)
 
-    while parser.next_block(t, "rf-pulse") is not None:
-        pulse_start, pulse_end = parser.next_block(t, "rf-pulse")
+    while parser.encounter(t, "rf-pulse") is not None:
+        pulse_start, pulse_end = parser.encounter(t, "rf-pulse")
         rep_start = (pulse_start + pulse_end) / 2
 
         # Calculate end of repetition
-        next_pulse = parser.next_block(pulse_end, "rf-pulse")
+        next_pulse = parser.encounter(pulse_end, "rf-pulse")
         if next_pulse is not None:
             rep_end = (next_pulse[0] + next_pulse[1]) / 2
         else:
             rep_end = parser.duration()
 
         # Get all ADC sample times
-        adc_times = parser.pois("adc", rep_start, rep_end)
+        adc_times = parser.events("adc", rep_start, rep_end, 100000)
         if len(adc_times) > 0:
             t = adc_times[-1]
 
@@ -46,31 +46,25 @@ def import_pulseq(path: str) -> mr0.Sequence:
         event_count = len(adc_times) + 1
 
         rep = seq.new_rep(event_count)
-        (angle, phase), _ = parser.integrate(pulse_start, pulse_end)
-        rep.pulse.angle = angle
-        rep.pulse.phase = phase
-        rep.pulse.usage = pulse_usage(angle)
+        pulse = parser.integrate_one(pulse_start, pulse_end).pulse
+        rep.pulse.angle = pulse.angle
+        rep.pulse.phase = pulse.phase
+        rep.pulse.usage = pulse_usage(pulse.angle)
 
         abs_times = [rep_start] + adc_times + [rep_end]
-        samples = parser.sample_n(adc_times)
-        moments = parser.integrate_n(abs_times)
+        samples = parser.sample(adc_times)
+        moments = parser.integrate(abs_times)
 
         rep.event_time[:] = torch.as_tensor(np.diff(abs_times))
 
-        # The following loop takes 99% of the time, even though it does basically
-        # nothing (since the introduction of the bulk integration / sampling functions).
-        # -> Find a way to more quickly move the data from disseqt into the event structures.
+        # This is how it should look like:
 
-        for i in range(len(abs_times) - 1):
-            _, (gx, gy, gz) = moments[i]
-            rep.gradm[i, 0] = gx * fov[0]
-            rep.gradm[i, 1] = gy * fov[1]
-            rep.gradm[i, 2] = gz * fov[2]
+        rep.gradm[:, 0] = torch.as_tensor(moments.gradient.x) * fov[0]
+        rep.gradm[:, 1] = torch.as_tensor(moments.gradient.y) * fov[1]
+        rep.gradm[:, 2] = torch.as_tensor(moments.gradient.z) * fov[2]
 
-            if i < len(samples):
-                _, _, (_, phase, _) = samples[i]
-                rep.adc_phase[i] = np.pi / 2 - phase
-                rep.adc_usage[i] = 1
+        rep.adc_usage[:-1] = 1
+        rep.adc_phase[:-1] = np.pi / 2 - torch.as_tensor(samples.adc.phase)
 
     return seq
 
