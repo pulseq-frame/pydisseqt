@@ -8,60 +8,78 @@ import numpy as np
 
 
 # %%
-def import_pulseq(path: str,
-                  overwrite_fov: tuple[float, float, float] | None = None
-                  ) -> mr0.Sequence:
-    parser = pydisseqt.load_pulseq(path)
+def import_file(file_name: str,
+                default_fov: tuple[float, float, float] = (1, 1, 1),
+                overwrite_fov: bool = False
+                ) -> mr0.Sequence:
+    """Import a pulseq .seq file.
+    
+    Parameters
+    ----------
+    file_name : str
+        The path to the file that is imported
+    default_fov : (float, float, float)
+        If no FOV is provided by the file, use this default value
+    overwrite_fov : bool
+        If true, use `default_fov` even if the file provides an FOV value
+    
+    Returns
+    -------
+    mr0.Sequence
+        The imported file as mr0 Sequence
+    
+    Note
+    ----
+    This function itself is not specific to pulseq, but supports whatever
+    pydisseqt supports. In the future, other sequence formats might be added.
+    """
+    parser = pydisseqt.load_pulseq(file_name)
     seq = mr0.Sequence()
-    t = 0
 
+    fov = parser.fov()
+    if fov is None or overwrite_fov:
+        fov = default_fov
+
+    # We should do at least _some_ guess for the pulse usage
     def pulse_usage(angle: float) -> mr0.PulseUsage:
         if abs(angle) < 100 * np.pi / 180:
             return mr0.PulseUsage.EXCIT
         else:
             return mr0.PulseUsage.REFOC
+    
+    # Get time points of all pulses
+    pulses = [] # Contains pairs of (pulse_start, pulse_end)
+    tmp = parser.encounter("rf", 0.0)
+    while tmp is not None:
+        pulses.append(tmp)
+        tmp = parser.encounter("rf", tmp[1]) # pulse_end
 
-    if overwrite_fov is not None:
-        fov = overwrite_fov
-    else:
-        fov = parser.fov()
-        if fov is None:
-            fov = (1, 1, 1)
-
-    while parser.encounter("rf", t) is not None:
-        pulse_start, pulse_end = parser.encounter("rf", t)
-        rep_start = (pulse_start + pulse_end) / 2
-        t = rep_start
-
-        # Calculate end of repetition
-        next_pulse = parser.encounter("rf", pulse_end)
-        if next_pulse is not None:
-            rep_end = (next_pulse[0] + next_pulse[1]) / 2
+    # Iterate over all repetitions (we ignore stuff before the first pulse)
+    for i in range(len(pulses)):
+        # Calculate repetition start and end time based on pulse centers
+        rep_start = (pulses[i][0] + pulses[i][1]) / 2
+        if i + 1 < len(pulses):
+            rep_end = (pulses[i + 1][0] + pulses[i + 1][1]) / 2
         else:
             rep_end = parser.duration()
 
-        # Get all ADC sample times
+        # Fetch additional data needed for building the mr0 sequence
+        pulse = parser.integrate_one(pulses[i][0], pulses[i][1]).pulse
         adc_times = parser.events("adc", rep_start, rep_end)
-
-        # Now build the mr0 repetition
-
-        # We simulate always up to the next ADC sample, except for the last
-        # event where we simulate up to the next pulse (could skip in last rep)
+        abs_times = [rep_start] + adc_times + [rep_end]
         event_count = len(adc_times) + 1
 
+        samples = parser.sample(adc_times)
+        moments = parser.integrate(abs_times)
+
+        # -- Now we build the mr0 Sequence repetition --
+
         rep = seq.new_rep(event_count)
-        pulse = parser.integrate_one(pulse_start, pulse_end).pulse
         rep.pulse.angle = pulse.angle
         rep.pulse.phase = pulse.phase
         rep.pulse.usage = pulse_usage(pulse.angle)
 
-        abs_times = [rep_start] + adc_times + [rep_end]
-        samples = parser.sample(adc_times)
-        moments = parser.integrate(abs_times)
-
         rep.event_time[:] = torch.as_tensor(np.diff(abs_times))
-
-        # This is how it should look like:
 
         rep.gradm[:, 0] = torch.as_tensor(moments.gradient.x) * fov[0]
         rep.gradm[:, 1] = torch.as_tensor(moments.gradient.y) * fov[1]
@@ -82,7 +100,7 @@ if __name__ == "__main__":
 
     start = time()
     # seq = import_pulseq("../../test-seqs/pypulseq/1.4.0/haste.seq")
-    seq = import_pulseq("../../test-seqs/spiral-TSE/ssTSE.seq", (0.24, 0.24, 1))
+    seq = import_file("../../test-seqs/spiral-TSE/ssTSE.seq", (0.24, 0.24, 1))
     print(f"Importing took {time() - start} seconds")
     seq.plot_kspace_trajectory((15, 15), "xy", False)
 
