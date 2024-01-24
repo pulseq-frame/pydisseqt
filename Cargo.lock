@@ -23,7 +23,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "disseqt"
 version = "0.1.0"
-source = "git+https://github.com/pulseq-frame/disseqt.git#d17046ee3368fec3f8c9b587241cf8576bcce954"
+source = "git+https://github.com/pulseq-frame/disseqt.git#6f28eca367913180d2127fa1d2e49886af4737d7"
 dependencies = [
  "pulseq-rs",
 ]
@@ -31,7 +31,7 @@ dependencies = [
 [[package]]
 name = "ezpc"
 version = "0.1.0"
-source = "git+https://github.com/pulseq-frame/ezpc.git#b1f49756442b960aa273b787b97a65196da52dab"
+source = "git+https://github.com/pulseq-frame/ezpc.git#2539e948d8165a4d60680c99ef910fd3381dd0c3"
 
 [[package]]
 name = "indoc"
@@ -105,7 +105,7 @@ dependencies = [
 [[package]]
 name = "pulseq-rs"
 version = "0.1.0"
-source = "git+https://github.com/pulseq-frame/pulseq-rs.git#90cef26b589d9d5c37e2f104b56a5b850ae67e7a"
+source = "git+https://github.com/pulseq-frame/pulseq-rs.git#04a159c0a231e33b42861c4d40c17aa352a295be"
 dependencies = [
  "ezpc",
  "thiserror",
