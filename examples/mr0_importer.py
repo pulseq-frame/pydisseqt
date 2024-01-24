@@ -92,11 +92,26 @@ def import_file(file_name: str,
 
 
 # %%
+import cv2
+import io
+
+
+def current_fig_as_img(dpi: float = 180) -> np.ndarray:
+    buf = io.BytesIO()
+    plt.gcf().savefig(buf, format="png", dpi=dpi)
+    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+    buf.close()
+    img = cv2.imdecode(img_arr, 1)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img.astype(np.uint8)
+
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import torch
     from time import time
     import torchkbnufft as tkbn
+    import imageio
 
     start = time()
     # seq = import_pulseq("../../test-seqs/pypulseq/1.4.0/haste.seq")
@@ -106,20 +121,39 @@ if __name__ == "__main__":
 
     phantom = mr0.VoxelGridPhantom.brainweb("subject04.npz")
     data = phantom.interpolate(128, 128, 32).slices([16]).build()
+    B0 = data.B0.clone()
 
-    graph = mr0.compute_graph(seq, data)
-    signal = mr0.execute_graph(graph, seq, data)
+    gif = []
+    for i, dB0 in enumerate(np.linspace(-5, 5, 150)):
+        print(f"{i + 1} / 150")
 
-    # NUFFT Reconstruction
-    res = [256, 256]
-    kspace = seq.get_kspace()[:, :2] / 30
-    dcomp = tkbn.calc_density_compensation_function(kspace.T, res)
-    nufft_adj = tkbn.KbNufftAdjoint(res, [res[0]*2, res[1]*2])
-    reco = nufft_adj(signal[None, None, :, 0] * dcomp, kspace.T)[0, 0, ...]
+        data.B0 = dB0 * B0
+        graph = mr0.compute_graph(seq, data)
+        signal = mr0.execute_graph(graph, seq.cuda(), data.cuda()).cpu()
 
-    plt.figure(figsize=(7, 7), dpi=120)
-    plt.imshow(reco.abs().T, origin='lower', vmin=0)
-    plt.axis("off")
-    plt.show()
+        # NUFFT Reconstruction
+        res = [256, 256]
+        kspace = seq.get_kspace()[:, :2] / 30
+        dcomp = tkbn.calc_density_compensation_function(kspace.T, res)
+        nufft_adj = tkbn.KbNufftAdjoint(res, [res[0]*2, res[1]*2])
+        reco = nufft_adj(signal[None, None, :, 0] * dcomp, kspace.T)[0, 0, ...]
+
+        # Quick and dirty FWHM: our synthetic B0 map is not really normal dist.
+        fwhm = 2 * np.sqrt(2 * np.log(2)) * data.B0.std()
+
+        plt.figure(figsize=(9, 5), dpi=80)
+        plt.suptitle(f"$FWHM(B_0) = {fwhm:.0f}\\,$Hz")
+        plt.subplot(121)
+        plt.title("Magnitude")
+        plt.axis("off")
+        plt.imshow(reco.abs().T, origin='lower', vmin=0)
+        plt.subplot(122)
+        plt.title("Phase")
+        plt.imshow(reco.angle().T, origin='lower', vmin=-np.pi, vmax=np.pi, cmap="twilight")
+        plt.axis("off")
+        plt.subplots_adjust(wspace=0.02)
+        gif.append(current_fig_as_img(80))
+        plt.close()
+    imageio.mimsave("B0 Spiral.gif", gif, duration=0.02)
 
 # %%
