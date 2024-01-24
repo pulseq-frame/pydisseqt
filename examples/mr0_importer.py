@@ -13,7 +13,7 @@ def import_file(file_name: str,
                 overwrite_fov: bool = False
                 ) -> mr0.Sequence:
     """Import a pulseq .seq file.
-    
+
     Parameters
     ----------
     file_name : str
@@ -22,12 +22,12 @@ def import_file(file_name: str,
         If no FOV is provided by the file, use this default value
     overwrite_fov : bool
         If true, use `default_fov` even if the file provides an FOV value
-    
+
     Returns
     -------
     mr0.Sequence
         The imported file as mr0 Sequence
-    
+
     Note
     ----
     This function itself is not specific to pulseq, but supports whatever
@@ -46,13 +46,13 @@ def import_file(file_name: str,
             return mr0.PulseUsage.EXCIT
         else:
             return mr0.PulseUsage.REFOC
-    
+
     # Get time points of all pulses
-    pulses = [] # Contains pairs of (pulse_start, pulse_end)
+    pulses = []  # Contains pairs of (pulse_start, pulse_end)
     tmp = parser.encounter("rf", 0.0)
     while tmp is not None:
         pulses.append(tmp)
-        tmp = parser.encounter("rf", tmp[1]) # pulse_end
+        tmp = parser.encounter("rf", tmp[1])  # pulse_end
 
     # Iterate over all repetitions (we ignore stuff before the first pulse)
     for i in range(len(pulses)):
@@ -92,11 +92,9 @@ def import_file(file_name: str,
 
 
 # %%
-import cv2
-import io
-
-
 def current_fig_as_img(dpi: float = 180) -> np.ndarray:
+    import cv2
+    import io
     buf = io.BytesIO()
     plt.gcf().savefig(buf, format="png", dpi=dpi)
     img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
@@ -117,19 +115,20 @@ if __name__ == "__main__":
     # seq = import_pulseq("../../test-seqs/pypulseq/1.4.0/haste.seq")
     seq = import_file("../../test-seqs/spiral-TSE/ssTSE.seq", (0.24, 0.24, 1))
     print(f"Importing took {time() - start} seconds")
-    seq.plot_kspace_trajectory((15, 15), "xy", False)
+    seq.plot_kspace_trajectory((7, 7), "xy", False)
 
     phantom = mr0.VoxelGridPhantom.brainweb("subject04.npz")
     data = phantom.interpolate(128, 128, 32).slices([16]).build()
     B0 = data.B0.clone()
 
     gif = []
-    for i, dB0 in enumerate(np.linspace(-5, 5, 150)):
-        print(f"{i + 1} / 150")
+    img_count = 3
+    for i, dB0 in enumerate(np.linspace(-5, 5, img_count)):
+        print(f"{i + 1} / {img_count}")
 
         data.B0 = dB0 * B0
         graph = mr0.compute_graph(seq, data)
-        signal = mr0.execute_graph(graph, seq.cuda(), data.cuda()).cpu()
+        signal = mr0.execute_graph(graph, seq, data)
 
         # NUFFT Reconstruction
         res = [256, 256]
@@ -149,11 +148,12 @@ if __name__ == "__main__":
         plt.imshow(reco.abs().T, origin='lower', vmin=0)
         plt.subplot(122)
         plt.title("Phase")
-        plt.imshow(reco.angle().T, origin='lower', vmin=-np.pi, vmax=np.pi, cmap="twilight")
+        plt.imshow(reco.angle().T, origin='lower',
+                   vmin=-np.pi, vmax=np.pi, cmap="twilight")
         plt.axis("off")
         plt.subplots_adjust(wspace=0.02)
         gif.append(current_fig_as_img(80))
         plt.close()
-    imageio.mimsave("B0 Spiral.gif", gif, duration=0.02)
+    imageio.mimsave("B0 Spiral.gif", gif, fps=1, loop=0)
 
 # %%
