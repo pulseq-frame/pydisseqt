@@ -18,31 +18,31 @@ struct Sequence(disseqt::Sequence);
 
 #[pymethods]
 impl Sequence {
-    fn fov(&self) -> Option<(f32, f32, f32)> {
+    fn fov(&self) -> Option<(f64, f64, f64)> {
         self.0.fov()
     }
 
-    fn duration(&self) -> f32 {
+    fn duration(&self) -> f64 {
         self.0.duration()
     }
 
-    fn encounter(&self, ty: &str, t_start: f32) -> PyResult<Option<(f32, f32)>> {
+    fn encounter(&self, ty: &str, t_start: f64) -> PyResult<Option<(f64, f64)>> {
         let ty = str_to_event_type(ty)?;
         Ok(self.0.encounter(t_start, ty))
     }
 
-    #[pyo3(signature = (ty, t_start=f32::NEG_INFINITY, t_end=f32::INFINITY, max_count=usize::MAX))]
-    fn events(&self, ty: &str, t_start: f32, t_end: f32, max_count: usize) -> PyResult<Vec<f32>> {
+    #[pyo3(signature = (ty, t_start=f64::NEG_INFINITY, t_end=f64::INFINITY, max_count=usize::MAX))]
+    fn events(&self, ty: &str, t_start: f64, t_end: f64, max_count: usize) -> PyResult<Vec<f64>> {
         let ty = str_to_event_type(ty)?;
         Ok(self.0.events(ty, t_start, t_end, max_count))
     }
 
-    fn next_event(&self, ty: &str, t_start: f32) -> PyResult<Option<f32>> {
+    fn next_event(&self, ty: &str, t_start: f64) -> PyResult<Option<f64>> {
         let ty = str_to_event_type(ty)?;
         Ok(self.0.next_event(t_start, ty))
     }
 
-    fn integrate(&self, time: Vec<f32>) -> MomentVec {
+    fn integrate(&self, time: Vec<f64>) -> MomentVec {
         let tmp = self.0.integrate(&time);
         MomentVec {
             pulse: RfPulseMomentVec {
@@ -57,7 +57,7 @@ impl Sequence {
         }
     }
 
-    fn integrate_one(&self, t_start: f32, t_end: f32) -> Moment {
+    fn integrate_one(&self, t_start: f64, t_end: f64) -> Moment {
         let tmp = self.0.integrate_one(t_start, t_end);
         Moment {
             pulse: RfPulseMoment {
@@ -72,7 +72,7 @@ impl Sequence {
         }
     }
 
-    fn sample(&self, time: Vec<f32>) -> SampleVec {
+    fn sample(&self, time: Vec<f64>) -> SampleVec {
         let tmp = self.0.sample(&time);
         SampleVec {
             pulse: RfPulseSampleVec {
@@ -93,7 +93,7 @@ impl Sequence {
         }
     }
 
-    fn sample_one(&self, t: f32) -> Sample {
+    fn sample_one(&self, t: f64) -> Sample {
         let tmp = self.0.sample_one(t);
         Sample {
             pulse: RfPulseSample {

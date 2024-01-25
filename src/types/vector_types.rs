@@ -6,22 +6,22 @@ use pyo3::pyclass;
 #[derive(Clone, Debug)]
 pub struct RfPulseSampleVec {
     #[pyo3(get)]
-    pub amplitude: Vec<f32>,
+    pub amplitude: Vec<f64>,
     #[pyo3(get)]
-    pub phase: Vec<f32>,
+    pub phase: Vec<f64>,
     #[pyo3(get)]
-    pub frequency: Vec<f32>,
+    pub frequency: Vec<f64>,
 }
 
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct GradientSampleVec {
     #[pyo3(get)]
-    pub x: Vec<f32>,
+    pub x: Vec<f64>,
     #[pyo3(get)]
-    pub y: Vec<f32>,
+    pub y: Vec<f64>,
     #[pyo3(get)]
-    pub z: Vec<f32>,
+    pub z: Vec<f64>,
 }
 
 #[pyclass]
@@ -30,9 +30,9 @@ pub struct AdcBlockSampleVec {
     #[pyo3(get)]
     pub active: Vec<bool>,
     #[pyo3(get)]
-    pub phase: Vec<f32>,
+    pub phase: Vec<f64>,
     #[pyo3(get)]
-    pub frequency: Vec<f32>,
+    pub frequency: Vec<f64>,
 }
 
 #[pyclass]
@@ -52,20 +52,20 @@ pub struct SampleVec {
 #[derive(Clone, Debug)]
 pub struct RfPulseMomentVec {
     #[pyo3(get)]
-    pub angle: Vec<f32>,
+    pub angle: Vec<f64>,
     #[pyo3(get)]
-    pub phase: Vec<f32>,
+    pub phase: Vec<f64>,
 }
 
 #[pyclass]
 #[derive(Clone, Debug)]
 pub struct GradientMomentVec {
     #[pyo3(get)]
-    pub x: Vec<f32>,
+    pub x: Vec<f64>,
     #[pyo3(get)]
-    pub y: Vec<f32>,
+    pub y: Vec<f64>,
     #[pyo3(get)]
-    pub z: Vec<f32>,
+    pub z: Vec<f64>,
 }
 
 #[pyclass]

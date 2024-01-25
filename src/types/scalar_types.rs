@@ -4,22 +4,22 @@ use pyo3::pyclass;
 #[derive(Clone, Copy, Debug)]
 pub struct RfPulseSample {
     #[pyo3(get)]
-    pub amplitude: f32,
+    pub amplitude: f64,
     #[pyo3(get)]
-    pub phase: f32,
+    pub phase: f64,
     #[pyo3(get)]
-    pub frequency: f32,
+    pub frequency: f64,
 }
 
 #[pyclass]
 #[derive(Clone, Copy, Debug)]
 pub struct GradientSample {
     #[pyo3(get)]
-    pub x: f32,
+    pub x: f64,
     #[pyo3(get)]
-    pub y: f32,
+    pub y: f64,
     #[pyo3(get)]
-    pub z: f32,
+    pub z: f64,
 }
 
 #[pyclass]
@@ -28,9 +28,9 @@ pub struct AdcBlockSample {
     #[pyo3(get)]
     pub active: bool,
     #[pyo3(get)]
-    pub phase: f32,
+    pub phase: f64,
     #[pyo3(get)]
-    pub frequency: f32,
+    pub frequency: f64,
 }
 
 #[pyclass]
@@ -50,20 +50,20 @@ pub struct Sample {
 #[derive(Clone, Copy, Debug)]
 pub struct GradientMoment {
     #[pyo3(get)]
-    pub x: f32,
+    pub x: f64,
     #[pyo3(get)]
-    pub y: f32,
+    pub y: f64,
     #[pyo3(get)]
-    pub z: f32,
+    pub z: f64,
 }
 
 #[pyclass]
 #[derive(Clone, Copy, Debug)]
 pub struct RfPulseMoment {
     #[pyo3(get)]
-    pub angle: f32,
+    pub angle: f64,
     #[pyo3(get)]
-    pub phase: f32,
+    pub phase: f64,
 }
 
 #[pyclass]
