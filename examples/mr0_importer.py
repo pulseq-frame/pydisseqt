@@ -10,8 +10,6 @@ from time import time
 
 # %%
 def import_file(file_name: str,
-                default_fov: tuple[float, float, float] = (1, 1, 1),
-                overwrite_fov: bool = False,
                 exact_trajectories: bool = True,
                 print_stats: bool = False
                 ) -> mr0.Sequence:
@@ -44,10 +42,6 @@ def import_file(file_name: str,
         print(f"Importing the .seq file took {time() - start} s")
     start = time()
     seq = mr0.Sequence()
-
-    fov = parser.fov()
-    if fov is None or overwrite_fov:
-        fov = default_fov
 
     # We should do at least _some_ guess for the pulse usage
     def pulse_usage(angle: float) -> mr0.PulseUsage:
@@ -143,9 +137,9 @@ def import_file(file_name: str,
 
         rep.event_time[:] = torch.as_tensor(np.diff(abs_times))
 
-        rep.gradm[:, 0] = torch.as_tensor(moments.gradient.x) * fov[0]
-        rep.gradm[:, 1] = torch.as_tensor(moments.gradient.y) * fov[1]
-        rep.gradm[:, 2] = torch.as_tensor(moments.gradient.z) * fov[2]
+        rep.gradm[:, 0] = torch.as_tensor(moments.gradient.x)
+        rep.gradm[:, 1] = torch.as_tensor(moments.gradient.y)
+        rep.gradm[:, 2] = torch.as_tensor(moments.gradient.z)
 
         if adc_start is not None:
             phases = np.pi / 2 - torch.as_tensor(samples.adc.phase)
@@ -177,11 +171,11 @@ if __name__ == "__main__":
     import imageio
 
     # seq = import_pulseq("../../test-seqs/pypulseq/1.4.0/haste.seq")
-    seq = import_file("../../test-seqs/spiral-TSE/ssTSE.seq", (0.24, 0.24, 1))
+    seq = import_file("../../test-seqs/spiral-TSE/ssTSE.seq")
     seq.plot_kspace_trajectory((7, 7), "xy", False)
 
     phantom = mr0.VoxelGridPhantom.brainweb("subject04.npz")
-    data = phantom.interpolate(128, 128, 32).slices([16]).build()
+    data = phantom.interpolate(128, 128, 32).slices([16]).build(use_SI_FoV=True)
     B0 = data.B0.clone()
 
     gif = []
@@ -195,7 +189,7 @@ if __name__ == "__main__":
 
         # NUFFT Reconstruction
         res = [256, 256]
-        kspace = seq.get_kspace()[:, :2] / 30
+        kspace = seq.get_kspace()[:, :2] / 150
         dcomp = tkbn.calc_density_compensation_function(kspace.T, res)
         nufft_adj = tkbn.KbNufftAdjoint(res, [res[0]*2, res[1]*2])
         reco = nufft_adj(signal[None, None, :, 0] * dcomp, kspace.T)[0, 0, ...]
