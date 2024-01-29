@@ -104,8 +104,8 @@ dependencies = [
 
 [[package]]
 name = "pulseq-rs"
-version = "0.1.0"
-source = "git+https://github.com/pulseq-frame/pulseq-rs.git#600b34548da815f09102a47cef723f4e3339e8a4"
+version = "0.1.1"
+source = "git+https://github.com/pulseq-frame/pulseq-rs.git#21c8f675ea0bed55648d8bd1bc52617f498ed766"
 dependencies = [
  "ezpc",
  "thiserror",
@@ -113,7 +113,7 @@ dependencies = [
 
 [[package]]
 name = "pydisseqt"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "disseqt",
  "pyo3",
