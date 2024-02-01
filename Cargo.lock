@@ -23,7 +23,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "disseqt"
 version = "0.1.0"
-source = "git+https://github.com/pulseq-frame/disseqt.git#0135c5ac0258afd3ad20db70116715f07a2e5acb"
+source = "git+https://github.com/pulseq-frame/disseqt.git#4cb2ad762e56da1ab5f72bd0e212a5170f18c8cf"
 dependencies = [
  "pulseq-rs",
 ]
@@ -41,9 +41,9 @@ checksum = "bfa799dd5ed20a7e349f3b4639aa80d74549c81716d9ec4f994c9b5815598306"
 
 [[package]]
 name = "libc"
-version = "0.2.152"
+version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
+checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 
 [[package]]
 name = "lock_api"
@@ -113,7 +113,7 @@ dependencies = [
 
 [[package]]
 name = "pydisseqt"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "disseqt",
  "pyo3",
