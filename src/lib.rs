@@ -13,6 +13,14 @@ fn load_pulseq(path: &str) -> PyResult<Sequence> {
     }
 }
 
+#[pyfunction]
+fn load_dsv(path: &str, resolution: Option<usize>) -> PyResult<Sequence> {
+    match disseqt::load_dsv(path, resolution) {
+        Ok(seq) => Ok(Sequence(seq)),
+        Err(err) => Err(ParseError::new_err(err.to_string())),
+    }
+}
+
 #[pyclass]
 struct Sequence(disseqt::Sequence);
 
@@ -119,6 +127,7 @@ impl Sequence {
 fn pydisseqt(py: Python, m: &PyModule) -> PyResult<()> {
     m.add("ParseError", py.get_type::<ParseError>())?;
     m.add_function(wrap_pyfunction!(load_pulseq, m)?)?;
+    m.add_function(wrap_pyfunction!(load_dsv, m)?)?;
     m.add_class::<Sequence>()?;
     Ok(())
 }
