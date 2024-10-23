@@ -2,7 +2,7 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
-### 0.1.6
+### 0.1.7
 - Updated disseqt: Make pulse phase (RFP) file optional as it is not always provided
 
 ### 0.1.5
