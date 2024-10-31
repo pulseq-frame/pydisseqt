@@ -3,6 +3,7 @@ import pydisseqt
 import MRzeroCore as mr0
 import numpy as np
 from time import time
+import matplotlib.pyplot as plt
 
 # NOTE: This importer is not diffusion-save.
 # For this, add more events at appropriate positions (maybe gated by a flag)
@@ -19,15 +20,11 @@ def import_file(file_name: str,
     ----------
     file_name : str
         The path to the file that is imported
-    default_fov : (float, float, float)
-        If no FOV is provided by the file, use this default value
-    overwrite_fov : bool
-        If true, use `default_fov` even if the file provides an FOV value
     exact_trajectories : bool
         If true, the gradients before and after the ADC blocks are imported
-        exactly. If false, they are summed into a single event. Depending on
-        the sequence, simulation might be faster if set to false, but the
-        simulated diffusion changes with simplified trajectoreis.
+        exactly. If false, they are summed into a single event. Depending
+        on the sequence, simulation might be faster if set to false, but
+        the simulated diffusion changes with simplified trajectoreis.
     print_stats : bool
         If set to true, additional information is printed during import
 
@@ -37,11 +34,15 @@ def import_file(file_name: str,
         The imported file as mr0 Sequence
     """
     start = time()
-    parser = pydisseqt.load_pulseq(file_name)
+    # TODO: build this funcitonality into disseqt
+    try:
+        parser = pydisseqt.load_dsv(file_name)
+    except:
+        parser = pydisseqt.load_pulseq(file_name)
     if print_stats:
-        print(f"Importing the .seq file took {time() - start} s")
+        print(f"Loading the file(s) took {time() - start} s")
     start = time()
-    seq = mr0.Sequence()
+    seq = mr0.Sequence(normalized_grads=False)
 
     # We should do at least _some_ guess for the pulse usage
     def pulse_usage(angle: float) -> mr0.PulseUsage:
@@ -69,7 +70,7 @@ def import_file(file_name: str,
         # Fetch additional data needed for building the mr0 sequence
         pulse = parser.integrate_one(pulses[i][0], pulses[i][1]).pulse
 
-        adc_times = parser.events("adc", rep_start, rep_end)
+        adcs = parser.events("adc", rep_start, rep_end)
 
         # To simulate diffusion, we want to more exactly simulate gradient
         # trajectories between pulses and the ADC block
@@ -78,28 +79,28 @@ def import_file(file_name: str,
             first = pulses[i][1]
             last = (pulses[i + 1][0] if i + 1 < len(pulses) else rep_end)
             eps = 1e-6  # Move a bit past start / end of repetition
-            # Gradient samples can be duplicated (x, y, z with identical times)
+            # Gradient samples can be duplicated between x, y, z.
             # They are deduplicated after rounding to `precision` digits
             precision = 6
 
-            if len(adc_times) > 0:
+            if len(adcs) > 0:
                 grad_before = sorted(set([round(t, precision) for t in (
-                    parser.events("grad x", first + eps, adc_times[0] - eps) +
-                    parser.events("grad y", first + eps, adc_times[0] - eps) +
-                    parser.events("grad z", first + eps, adc_times[0] - eps)
+                    parser.events("grad x", first + eps, adcs[0] - eps) +
+                    parser.events("grad y", first + eps, adcs[0] - eps) +
+                    parser.events("grad z", first + eps, adcs[0] - eps)
                 )]))
                 grad_after = sorted(set([round(t, precision) for t in (
-                    parser.events("grad x", adc_times[-1] + eps, last - eps) +
-                    parser.events("grad y", adc_times[-1] + eps, last - eps) +
-                    parser.events("grad z", adc_times[-1] + eps, last - eps)
+                    parser.events("grad x", adcs[-1] + eps, last - eps) +
+                    parser.events("grad y", adcs[-1] + eps, last - eps) +
+                    parser.events("grad z", adcs[-1] + eps, last - eps)
                 )]))
-                # Last repetition: there is no pulse, ignore [last, rep_end]
+                # Last repetition: no pulse, ignore [last, rep_end]
                 if i == len(pulses) - 1:
-                    abs_times = [rep_start, first] + grad_before + adc_times
+                    abs_times = [rep_start, first] + grad_before + adcs
                 else:
-                    abs_times = ([rep_start, first] + grad_before + adc_times +
-                                 grad_after + [last, rep_end])
-                # Index of first ADC: -1 because we count spans between indices
+                    abs_times = ([rep_start, first] + grad_before + adcs +
+                                    grad_after + [last, rep_end])
+                # Index of first ADC: -1 - we count spans between indices
                 adc_start = 2 + len(grad_before) - 1
             else:
                 grad = sorted(set([round(t, precision) for t in (
@@ -107,25 +108,25 @@ def import_file(file_name: str,
                     parser.events("grad y", first + eps, last - eps) +
                     parser.events("grad z", first + eps, last - eps)
                 )]))
-                # Last repetition: there is no pulse, ignore [last, rep_end]
+                # Last repetition: no pulse, ignore [last, rep_end]
                 if i == len(pulses) - 1:
                     abs_times = [rep_start, first] + grad
                 else:
-                    abs_times = ([rep_start, first] + grad + [last, rep_end])
+                    abs_times = [rep_start, first] + grad + [last, rep_end]
                 adc_start = None
         else:
             # No gradient samples, only adc and one final to the next pulse
-            abs_times = [rep_start] + adc_times + [rep_end]
+            abs_times = [rep_start] + adcs + [rep_end]
             adc_start = 0
 
         event_count = len(abs_times) - 1
-        samples = parser.sample(adc_times)
+        samples = parser.sample(adcs)
         moments = parser.integrate(abs_times)
 
         if print_stats:
             print(
                 f"Rep. {i + 1}: {event_count} samples, of which "
-                f"{len(adc_times)} are ADC (starting at {adc_start})"
+                f"{len(adcs)} are ADC (starting at {adc_start})"
             )
 
         # -- Now we build the mr0 Sequence repetition --
@@ -143,12 +144,42 @@ def import_file(file_name: str,
 
         if adc_start is not None:
             phases = np.pi / 2 - torch.as_tensor(samples.adc.phase)
-            rep.adc_usage[adc_start:adc_start + len(adc_times)] = 1
-            rep.adc_phase[adc_start:adc_start + len(adc_times)] = phases
+            rep.adc_usage[adc_start:adc_start + len(adcs)] = 1
+            rep.adc_phase[adc_start:adc_start + len(adcs)] = phases
 
     if print_stats:
         print(f"Converting the sequence to mr0 took {time() - start} s")
     return seq
+
+
+# %%
+files = [
+    "3DSnapshotGRE_Comparision_E_0_64_64_8_alternating_fully_sampled/SimulationProtocol",
+    "AA_loc_RFP/SimulationProtocol",
+    "../../test-seqs/spiral-TSE/ssTSE.seq",
+    "../../test-seqs/pypulseq/1.4.0/haste.seq",
+]
+
+seq = import_file(files[1], False, True)
+
+cmap = plt.get_cmap("viridis")
+plt.figure(figsize=(10, 4), dpi=120)
+plt.subplot(121)
+for i in range(len(seq)):
+    gradm = seq[i].gradm.cumsum(0)#[seq[i].adc_usage != 0, :]
+    plt.plot(gradm[:-1, 0], gradm[:-1, 1], c=cmap(i / (len(seq) - 1)))
+plt.grid()
+plt.xlabel("x")
+plt.ylabel("y")
+plt.subplot(122)
+for i in range(len(seq)):
+    gradm = seq[i].gradm.cumsum(0)#[seq[i].adc_usage != 0, :]
+    plt.plot(gradm[:-1, 1], gradm[:-1, 2], c=cmap(i / (len(seq) - 1)))
+plt.grid()
+plt.xlabel("y")
+plt.ylabel("z")
+plt.show()
+
 
 
 # %%
@@ -170,12 +201,11 @@ if __name__ == "__main__":
     import torchkbnufft as tkbn
     import imageio
 
-    # seq = import_pulseq("../../test-seqs/pypulseq/1.4.0/haste.seq")
-    seq = import_file("../../test-seqs/spiral-TSE/ssTSE.seq")
+    seq = import_file("AA_loc_RFP/SimulationProtocol")
     seq.plot_kspace_trajectory((7, 7), "xy", False)
 
     phantom = mr0.VoxelGridPhantom.brainweb("subject04.npz")
-    data = phantom.interpolate(128, 128, 32).slices([16]).build(use_SI_FoV=True)
+    data = phantom.interpolate(128, 128, 32).slices([16]).build()
     B0 = data.B0.clone()
 
     gif = []
