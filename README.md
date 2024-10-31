@@ -2,6 +2,9 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+### 0.1.9
+- Updated disseqt: Now respects ref_voltage for correct units on .dsv import
+
 ### 0.1.8
 - Updated disseqt: Make pulse phase (RFP) file optional as it is not always provided
 
