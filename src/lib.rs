@@ -14,8 +14,8 @@ fn load_pulseq(path: &str) -> PyResult<Sequence> {
 }
 
 #[pyfunction]
-fn load_dsv(path: &str, resolution: Option<usize>) -> PyResult<Sequence> {
-    match disseqt::load_dsv(path, resolution) {
+fn load_dsv(path: &str, ref_voltage: f64, resolution: Option<usize>) -> PyResult<Sequence> {
+    match disseqt::load_dsv(path, resolution, ref_voltage) {
         Ok(seq) => Ok(Sequence(seq)),
         Err(err) => Err(ParseError::new_err(err.to_string())),
     }

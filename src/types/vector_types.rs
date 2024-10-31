@@ -1,5 +1,7 @@
 use pyo3::pyclass;
 
+/// TODO: these should maybe have len() and sequence methods, events should have durations
+
 // sample() types
 
 #[pyclass]
