@@ -2,6 +2,9 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+### 0.1.10
+- Updated pulseq-rs: can now load .seq files using the rfshim pTx extension
+
 ### 0.1.9
 - Updated disseqt: Now respects ref_voltage for correct units on .dsv import
 

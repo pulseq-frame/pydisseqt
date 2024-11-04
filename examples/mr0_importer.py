@@ -4,6 +4,7 @@ import MRzeroCore as mr0
 import numpy as np
 from time import time
 import matplotlib.pyplot as plt
+import torch
 
 # NOTE: This importer is not diffusion-save.
 # For this, add more events at appropriate positions (maybe gated by a flag)
@@ -158,9 +159,10 @@ files = [
     "AA_loc_RFP/SimulationProtocol",
     "../../test-seqs/spiral-TSE/ssTSE.seq",
     "../../test-seqs/pypulseq/1.4.0/haste.seq",
+    "../../test-seqs/pypulseq_rf_shim/B1map_presat_4adc_pythonby_rfshim.seq",
 ]
 
-seq = import_file(files[1], False, True)
+seq = import_file(files[4], False, True)
 
 cmap = plt.get_cmap("viridis")
 plt.figure(figsize=(10, 4), dpi=120)
