@@ -2,6 +2,9 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+### 0.1.12
+- Updated typing info
+
 ### 0.1.11
 - Implemented pTx extension to correctly forward through pydisseqt
 
