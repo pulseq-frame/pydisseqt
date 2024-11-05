@@ -87,6 +87,7 @@ impl Sequence {
                 amplitude: tmp.pulse.amplitude,
                 phase: tmp.pulse.phase,
                 frequency: tmp.pulse.frequency,
+                shim: tmp.pulse.shim,
             },
             gradient: GradientSampleVec {
                 x: tmp.gradient.x,
@@ -108,6 +109,7 @@ impl Sequence {
                 amplitude: tmp.pulse.amplitude,
                 phase: tmp.pulse.phase,
                 frequency: tmp.pulse.frequency,
+                shim: tmp.pulse.shim,
             },
             gradient: GradientSample {
                 x: tmp.gradient.x,

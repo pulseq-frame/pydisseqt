@@ -70,6 +70,7 @@ def import_file(file_name: str,
 
         # Fetch additional data needed for building the mr0 sequence
         pulse = parser.integrate_one(pulses[i][0], pulses[i][1]).pulse
+        shim = parser.sample_one(rep_start).pulse.shim
 
         adcs = parser.events("adc", rep_start, rep_end)
 
@@ -136,6 +137,8 @@ def import_file(file_name: str,
         rep.pulse.angle = pulse.angle
         rep.pulse.phase = pulse.phase
         rep.pulse.usage = pulse_usage(pulse.angle)
+        if shim is not None:
+            rep.pulse.shim_array = shim
 
         rep.event_time[:] = torch.as_tensor(np.diff(abs_times))
 
@@ -162,7 +165,7 @@ files = [
     "../../test-seqs/pypulseq_rf_shim/B1map_presat_4adc_pythonby_rfshim.seq",
 ]
 
-seq = import_file(files[4], False, True)
+seq = import_file(files[2], False, True)
 
 cmap = plt.get_cmap("viridis")
 plt.figure(figsize=(10, 4), dpi=120)

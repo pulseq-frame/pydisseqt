@@ -13,6 +13,8 @@ pub struct RfPulseSampleVec {
     pub phase: Vec<f64>,
     #[pyo3(get)]
     pub frequency: Vec<f64>,
+    #[pyo3(get)]
+    pub shim: Vec<Option<Vec<(f64, f64)>>>,
 }
 
 #[pyclass]

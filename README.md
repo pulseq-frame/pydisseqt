@@ -2,6 +2,9 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+### 0.1.11
+- Implemented pTx extension to correctly forward through pydisseqt
+
 ### 0.1.10
 - Updated pulseq-rs: can now load .seq files using the rfshim pTx extension
 

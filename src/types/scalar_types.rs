@@ -1,7 +1,7 @@
 use pyo3::pyclass;
 
 #[pyclass]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct RfPulseSample {
     #[pyo3(get)]
     pub amplitude: f64,
@@ -9,6 +9,8 @@ pub struct RfPulseSample {
     pub phase: f64,
     #[pyo3(get)]
     pub frequency: f64,
+    #[pyo3(get)]
+    pub shim: Option<Vec<(f64, f64)>>,
 }
 
 #[pyclass]
@@ -34,7 +36,7 @@ pub struct AdcBlockSample {
 }
 
 #[pyclass]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Sample {
     #[pyo3(get)]
     pub pulse: RfPulseSample,
