@@ -2,6 +2,8 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+- 0.1.14
+  - Updated disseqt to support fixed ADC resolution that does not align to grid
 - 0.1.13
   - Updated pulseq-rs for support of shim shape 0
 - 0.1.12

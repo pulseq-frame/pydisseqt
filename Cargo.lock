@@ -23,7 +23,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "disseqt"
 version = "0.1.0"
-source = "git+https://github.com/pulseq-frame/disseqt.git?branch=dsv#3fd520a1807e3a518b7d1acd0372a6a7640eaa12"
+source = "git+https://github.com/pulseq-frame/disseqt.git?branch=dsv#1b6ff0ca9564ac5d9ae3e76f17cb35f1fd0d149c"
 dependencies = [
  "pulseq-rs",
  "thiserror",
@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "pydisseqt"
-version = "0.1.13"
+version = "0.1.14"
 dependencies = [
  "disseqt",
  "pyo3",
