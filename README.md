@@ -2,6 +2,8 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+- 0.1.15
+  - Update disseqt: fall back to NC1 file for pulse phase if RFP was not found
 - 0.1.14
   - Updated disseqt to support fixed ADC resolution that does not align to grid
 - 0.1.13
