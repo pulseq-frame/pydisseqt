@@ -15,7 +15,7 @@ def pulse_usage(angle: float) -> mr0.PulseUsage:
 
 
 def import_dsv(file):
-    seq = pydisseqt.load_dsv(file)
+    seq = pydisseqt.load_dsv(file, 612.70998, 320)
 
     # First, load the position of pulses and calculate the starting points
     # of the repetitions from it
@@ -67,8 +67,10 @@ def import_dsv(file):
 # %%
 
 # seq = import_dsv("3DSnapshotGRE_Comparision_E_0_64_64_8_alternating_fully_sampled/SimulationProtocol")
-seq = import_dsv("AA_loc_RFP/SimulationProtocol")
+seq = import_dsv("SimulationProtocol_ADC/SimulationProtocol")
 
-plt.plot([rep.pulse.angle * 180/np.pi for rep in seq])
+plt.figure()
+plt.plot([rep.pulse.phase * 180/np.pi for rep in seq])
+plt.show()
 
 # %%
