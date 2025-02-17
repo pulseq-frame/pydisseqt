@@ -23,7 +23,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "disseqt"
 version = "0.1.0"
-source = "git+https://github.com/pulseq-frame/disseqt.git?branch=dsv#ed5140a7b1f4d2fb5fe1240971e9b7dd93850535"
+source = "git+https://github.com/pulseq-frame/disseqt.git?branch=dsv#a74d772de8a3c768f9ca47241913182b0c79c7c7"
 dependencies = [
  "pulseq-rs",
  "thiserror",

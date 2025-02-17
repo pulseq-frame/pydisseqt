@@ -2,6 +2,8 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+- 0.1.18:
+  - Updated disseqt for adc phase conversion bugfix
 - 0.1.17:
   - Updated disseqt for pulse phase conversion bugfix
 - 0.1.15
