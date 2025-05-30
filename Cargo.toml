@@ -1,6 +1,6 @@
 [package]
 name = "pydisseqt"
-version = "0.1.18"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,4 +11,4 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = "0.19.0"
 # disseqt = { path = "../disseqt"}
-disseqt = { git = "https://github.com/pulseq-frame/disseqt.git", branch = "dsv" }
+disseqt = { git = "https://github.com/pulseq-frame/disseqt.git" }

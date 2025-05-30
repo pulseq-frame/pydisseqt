@@ -2,6 +2,9 @@ Python wrapper around [disseqt](https://github.com/pulseq-frame/disseqt) built u
 
 # Changelog:
 
+- 0.2.0:
+  - Switched to disseqt master branch
+  - ADC phase now contains phase resulting from ADC frequency
 - 0.1.18:
   - Updated disseqt for adc phase conversion bugfix
 - 0.1.17:
